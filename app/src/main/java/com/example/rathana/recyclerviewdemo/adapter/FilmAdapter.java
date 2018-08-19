@@ -39,6 +39,11 @@ public class FilmAdapter extends RecyclerView.Adapter<FilmAdapter.ViewHolder>{
         notifyDataSetChanged();
     }
 
+    public void setFilmsToTop(List<Film> filmsTop){
+        this.films.addAll(0,filmsTop);
+
+        notifyItemRangeInserted(0,filmsTop.size());
+    }
     @NonNull
     @Override
     public ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
@@ -114,12 +119,32 @@ public class FilmAdapter extends RecyclerView.Adapter<FilmAdapter.ViewHolder>{
         this.films.add(0,film);
         notifyItemInserted(0);
     }
+
+    public void replaceFilms(List<Film> films){
+        this.films.clear();
+        this.films.addAll(films);
+        notifyDataSetChanged();
+    }
+
+    public  void clearFilms(){
+        this.films.clear();
+        notifyDataSetChanged();
+    }
+
     public void updateFilm(Film film,int position){
         //int position =films.indexOf(film);
         this.films.set(position,film);
         notifyItemChanged(position);
     }
-
+   /* public void clearData(){
+        this.films.clear();
+        notifyDataSetChanged();
+    }*/
+   /* public void replaceFilms(List<Film> films){
+        this.films.clear();
+        this.films.addAll(films);
+        notifyDataSetChanged();
+    }*/
     private static final String TAG = "FilmAdapter";
     public void searchItem(String text){
         /*for(Film film : films){

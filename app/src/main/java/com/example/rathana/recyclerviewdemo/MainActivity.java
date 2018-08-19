@@ -3,6 +3,7 @@ package com.example.rathana.recyclerviewdemo;
 import android.content.Intent;
 import android.os.Handler;
 import android.support.v4.view.MenuItemCompat;
+import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -15,19 +16,24 @@ import android.view.MenuItem;
 import com.example.rathana.recyclerviewdemo.adapter.FilmAdapter;
 import com.example.rathana.recyclerviewdemo.callback.ItemClickCallback;
 import com.example.rathana.recyclerviewdemo.model.Film;
+import com.hendraanggrian.widget.PaginatedRecyclerView;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity implements ItemClickCallback{
 
-    private RecyclerView rvFilm;
+    private PaginatedRecyclerView rvFilm;
+    private SwipeRefreshLayout swipeRefreshLayout;
     private List<Film> films=new ArrayList();
     private FilmAdapter filmAdapter;
 
     private static final int REQUEST_CODE=1;
     private static final int REQUEST_CODE_EDIT=2;
     private static final String TAG = "MainActivity";
+
+    private boolean isSuccess=true;
+    private int totalPage=10;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -35,6 +41,7 @@ public class MainActivity extends AppCompatActivity implements ItemClickCallback
 
         //setup view
         rvFilm=findViewById(R.id.rvFilm);
+        swipeRefreshLayout=findViewById(R.id.swipeRefreshLayout);
         //set LayoutManager
         LinearLayoutManager layoutManager=new LinearLayoutManager(
                 this,
@@ -46,19 +53,52 @@ public class MainActivity extends AppCompatActivity implements ItemClickCallback
         //create Adapter
         filmAdapter=new FilmAdapter(this,films);
         rvFilm.setAdapter(filmAdapter);
+        //set pagination
+        rvFilm.setPagination(paginate);
 
+        swipeRefreshLayout.setOnRefreshListener(()->{
+            updateNewData();
+            itemScroll(0);
+            //paginate.notifyPaginationReset();
+            if(swipeRefreshLayout.isRefreshing())
+                swipeRefreshLayout.setRefreshing(false);
+
+        });
         //update data
-        updateData();
+        //updateData();
 
     }
+
+
+    PaginatedRecyclerView.Pagination paginate= new PaginatedRecyclerView.Pagination(){
+
+        @Override
+        public void onPaginate(int page) {
+            new Handler().postDelayed(()->{
+                updateData();
+                notifyLoadingCompleted();
+                },1500);
+
+            if(page==totalPage)
+                notifyPaginationFinished();
+        }
+    };
 
     private void updateData() {
-        for(int i=0;i<50;i++){
-            this.films.add(new Film("star war 2 "+i,"100K",R.drawable.kangaroo,"HRD"));
+        List<Film> films =new ArrayList<>();
+        for(int i=0;i<15;i++){
+            films.add(new Film("star war 2 "+i,"100K",R.drawable.kangaroo,"HRD"));
         }
-        filmAdapter.setFilms(this.films);
+        filmAdapter.setFilms(films);
     }
 
+    private void updateNewData() {
+        List<Film> films =new ArrayList<>();
+        for(int i=0;i<15;i++){
+            films.add(new Film("the meg "+i,"100K",R.drawable.kangaroo,"HRD"));
+        }
+        filmAdapter.setFilmsToTop(films);
+    }
     /*
     * create option menu
     * */
@@ -78,14 +118,15 @@ public class MainActivity extends AppCompatActivity implements ItemClickCallback
 
             @Override
             public boolean onQueryTextChange(String newText) {
-                //Log.e(TAG, "onQueryTextChange: "+newText );
-                new Handler().postDelayed(()->{
-                    filmAdapter.searchItem(newText);
-                    },1000);
+                Log.e(TAG, "onQueryTextChange: "+newText);
+                new Handler().postDelayed(
+                        ()->{ searchFilm(newText); },1000);
 
                 return true;
             }
         });
+
+
         return true;
     }
 
@@ -134,7 +175,32 @@ public class MainActivity extends AppCompatActivity implements ItemClickCallback
         startActivityForResult(intent,REQUEST_CODE_EDIT);
     }
 
+    /*public List<Film> searchFilm(String text){
+        List<Film> subFilms= new ArrayList<>();
+        for(Film film :films){
+            if(film.getTitle().matches(text)){
+                subFilms.add(film);
+            }
+        }
+        return subFilms;
+    }*/
+
     public void searchFilm(String text){
+        if(text.isEmpty()){
+            filmAdapter.clearFilms();
+            updateData();
+            return;
+        }
+
+        List<Film> subFilms=new ArrayList<>();
+        for(Film film : this.films){
+            if(film.getTitle().matches("(?i)("+text+").*")){
+                subFilms.add(film);
+            }
+        }
+        filmAdapter.replaceFilms(subFilms);
+
 
     }
+
 }

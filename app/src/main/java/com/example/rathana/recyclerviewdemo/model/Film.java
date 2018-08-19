@@ -109,4 +109,16 @@ public class Film implements Parcelable{
     public void setView(String view) {
         this.view = view;
     }
+
+    @Override
+    public String toString() {
+        return "Film{" +
+                "id=" + id +
+                ", title='" + title + '\'' +
+                ", description='" + description + '\'' +
+                ", view='" + view + '\'' +
+                ", thumb=" + thumb +
+                ", channel='" + channel + '\'' +
+                '}';
+    }
 }
